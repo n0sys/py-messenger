@@ -11,6 +11,8 @@ Setup Database in SQL container:
 	CREATE TABLE users ( username varchar(255) NOT NULL, password varchar(70), PRIMARY KEY (username) ); 
 	CREATE USER 'signupbot'@'172.17.%.%' IDENTIFIED BY 'signupbot';
 	GRANT INSERT ON pyapp.users TO 'signupbot'@'172.17.%.%';
+	
+TODO: dont specify ip addresses
 		
 
 

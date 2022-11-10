@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from managedb.scripts import *
+from db import *
 
 def welcome():
 	print("----------------------------------------\nWelcome to SPM (Secure Python-Messenger)\n----------------------------------------\n")
