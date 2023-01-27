@@ -166,6 +166,7 @@ def message(identity):
 		#encrypt message | rc4 if file - rc5 if plain message
 		if msg_type=="file":
 			enc_message=message_rc4(message_key,msg,op=1)
+		#TODO: fix file encryption - RC5 key taken as string
 		elif msg_type=="message":
 			cryptor = RC5(message_key)
 			cryptor.mode = "CBC"

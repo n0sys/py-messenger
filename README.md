@@ -44,3 +44,7 @@ CREATE TABLE keylists ( username varchar(255) NOT NULL, pg text(32765), id_pub t
 INSERT INTO keylists VALUES ('default',$pg,'NA','NA','NA','NA','NA');  ##pg='[1,2]'
 CREATE TABLE messages_table ( username varchar(255) NOT NULL, message_number varchar(70), enc_message text(32765), message_type text(10000));
 ```
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
