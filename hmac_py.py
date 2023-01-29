@@ -57,11 +57,3 @@ def hmac(sk, k, iv):
 	hashed=sha256.sha256(newsk)
 	
 	return hashed
-	
-	
-	
-#a=2**8190
-#a=str(a)
-#b=1
-#c=hmac(a,b,0)
-#print(c)

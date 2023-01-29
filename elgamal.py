@@ -2,7 +2,7 @@ import random
 from hashlib import sha256
 import libnum
 from math import gcd
-from exprapide import exprap
+from generate_keys import exprap
 
 def sign_elgamal(key,priv_key,p,g):
 	#p prime number, g generator >> fetch from db
@@ -19,6 +19,7 @@ def sign_elgamal(key,priv_key,p,g):
 	#transform key (which is an int) to bytes
 	key=key.to_bytes((key.bit_length()+7) // 8,'big')
 	#hash 256 of key
+	#TODO:use sha256 own implementation  
 	hash_key=sha256()
 	hash_key.update(key)
 	hash_key=hash_key.hexdigest()

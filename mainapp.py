@@ -12,6 +12,8 @@ import time
 default_username="signupbot"
 default_password="signupbot"
 
+#TODO: Stable mysql container IP
+#TODO: fix db tables structure
 def welcome():
 	print("----------------------------------------\nWelcome to SPM (Secure Python-Messenger)\n----------------------------------------\n")
 	print("Please Login or Signup to use the app")
@@ -26,10 +28,9 @@ def auth():
 	else:
 		print("Wrong input, type L to login or S to signup")
 		auth()
-
-#create an account	
+		
+#create an account
 def signup():
-	
 	a=input("Type your username :")
 	query = "SELECT username FROM users WHERE username='{}';".format(a)
 	res=db.execute_query(default_username,default_password,query)
@@ -168,6 +169,7 @@ def message(identity):
 			enc_message=message_rc4(message_key,msg,op=1)
 		#TODO: fix file encryption - RC5 key taken as string
 		elif msg_type=="message":
+			message_key = string_to_bytesarray(message_key)
 			cryptor = RC5(message_key)
 			cryptor.mode = "CBC"
 			enc_message = cryptor.encrypt_str(msg)
@@ -220,6 +222,7 @@ def read_received_messages(identity):
 			dec_message=message_rc4(message_key,row[2],op=0)
 		elif row[3]=='message':
 			#then decrypt as message | rc5
+			message_key = string_to_bytesarray(message_key)
 			cryptor = RC5(message_key)
 			cryptor.mode = "CBC"
 			dec_message = cryptor.decrypt_str(row[2])
@@ -240,6 +243,7 @@ def read_received_messages(identity):
 		if counter == len(res):
 			all_received_messages_list.append(same_user_messages)
 	for chat in all_received_messages_list:
+		#TODO: fix below
 		user=chat.split(":::#?")[0]
 		print("Showing messages received from "+user+ " :")
 		msgs=chat.split(":::#?")[1]
@@ -380,6 +384,16 @@ def generate_sk_as_receiver(contact):
 	Config.write(cfgfile)
 	cfgfile.close()
 	
+def string_to_bytesarray(string: str) -> bytearray:
+	counter = 0
+	s = [string[2*i:2*i+2] for i in range(len(string)//2)]
+	bytes_array = bytearray(len(s))
+
+	for item in s:
+		bytes_array[counter]=int(item, 16)
+		counter+=1
+	return bytes_array
+		
 if __name__ == "__main__":
 	welcome()
 	auth()

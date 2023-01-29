@@ -16,7 +16,7 @@ class RC5(object):
         self.blocksize = 32
         self.rounds = 12
         self.iv = os.urandom(self.blocksize // 8)
-        self._key = key.encode('utf-8')
+        self._key = key
 
     @staticmethod
     def _rotate_left(val, r_bits, max_bits):
