@@ -41,6 +41,5 @@ CREATE TABLE users ( username varchar(255) NOT NULL, password varchar(70), PRIMA
 CREATE USER 'signupbot'@NETWORK_ADDRESS IDENTIFIED WITH mysql_native_password BY 'signupbot';
 GRANT SELECT,INSERT,DELETE,UPDATE ON pyapp.* TO 'signupbot'@NETWORK_ADDRESS;
 CREATE TABLE keylists ( username varchar(255) NOT NULL, pg text(32765), id_pub text(32765),sigpk_pub text(32765),sig_sigpk text(32765),otpk_pub text(32765),eph_pub text(32765), PRIMARY KEY (username) );
-INSERT INTO keylists VALUES ('default',$pg,'NA','NA','NA','NA','NA');  ##pg='[1,2]'
 CREATE TABLE messages_table ( username varchar(255) NOT NULL, message_number varchar(70), enc_message text(32765), message_type text(10000));
 ```

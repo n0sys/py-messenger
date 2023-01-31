@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import db
-from generate_keys import diffHellkeys,diffHellshared
+from generate_keys import diffHellkeys,diffHellshared,get_pg
 import elgamal
 import configparser
 import os
@@ -271,26 +271,22 @@ def read_received_messages(identity):
 #generates users keys and stores them in db
 def generate_keys(identity):
 	#fetch p and g from the database
-	query = "SELECT pg from keylists where username='default'"
-	res=db.execute_query(default_username,default_password,query)
-	pg=res[0][0]
-	pg=pg[1:-1]
-	pg=pg.split(',')
+	pg=get_pg()
 	p=int(pg[0])
 	g=int(pg[1])
 	#generate ID key pair
-	ID_keypair=diffHellkeys(p,g)
+	ID_keypair=diffHellkeys()
 	ID_priv=ID_keypair[0]
 	ID_pub=ID_keypair[1]
 	#generate SIGPK key pair
-	SIGPK_keypair=diffHellkeys(p,g)
+	SIGPK_keypair=diffHellkeys()
 	SIGPK_pub=SIGPK_keypair[1]
 	#calculate Sig(SIGPK_pub,ID_priv) || elgamal signature
 	SIG_SIGPK=elgamal.sign_elgamal(SIGPK_pub,ID_priv,p,g)
 	#generate OTPK key pair
-	OTPK_keypair=diffHellkeys(p,g)
+	OTPK_keypair=diffHellkeys()
 	#generate EPH key pair
-	EPH_keypair=diffHellkeys(p,g)
+	EPH_keypair=diffHellkeys()
 	#store priv keys + eph pub key in config file
 	Config = configparser.ConfigParser()
 	if Config.read("config.ini")==[]:
@@ -335,10 +331,10 @@ def generate_sk_as_first_sender(contact):
 	IDA_priv=int(Config.get('PrivateKeys','id_priv'))
 	EPHA_priv=int(Config.get('PrivateKeys','eph_priv'))
 	#generate SK
-	DH1=diffHellshared(SIGPKB_pub,IDA_priv,p)
-	DH2=diffHellshared(int(IDB_pub),EPHA_priv,p)
-	DH3=diffHellshared(SIGPKB_pub,EPHA_priv,p)
-	DH4=diffHellshared(OTPKB_pub,EPHA_priv,p)
+	DH1=diffHellshared(SIGPKB_pub,IDA_priv)
+	DH2=diffHellshared(int(IDB_pub),EPHA_priv)
+	DH3=diffHellshared(SIGPKB_pub,EPHA_priv)
+	DH4=diffHellshared(OTPKB_pub,EPHA_priv)
 	all_DH=int(str(DH1)+str(DH2)+str(DH3)+str(DH4))
 	SK=hmac(str(all_DH),1,0)
 	Config.set('PrivateKeys','sk_'+str(contact),str(SK))
@@ -373,10 +369,10 @@ def generate_sk_as_receiver(contact):
 	SIGPKR_priv=int(Config.get('PrivateKeys','sigpk_priv'))
 	OTPKR_priv=int(Config.get('PrivateKeys','otpk_priv'))
 	#generate SK
-	DH1=diffHellshared(int(IDS_pub),SIGPKR_priv,p)
-	DH2=diffHellshared(EPHS_pub,IDR_priv,p)
-	DH3=diffHellshared(EPHS_pub,SIGPKR_priv,p)
-	DH4=diffHellshared(EPHS_pub,OTPKR_priv,p)
+	DH1=diffHellshared(int(IDS_pub),SIGPKR_priv)
+	DH2=diffHellshared(EPHS_pub,IDR_priv)
+	DH3=diffHellshared(EPHS_pub,SIGPKR_priv)
+	DH4=diffHellshared(EPHS_pub,OTPKR_priv)
 	all_DH=int(str(DH1)+'_'+str(DH2)+'_'+str(DH3)+'_'+str(DH4))
 	SK=hmac(str(all_DH),1,0)
 	Config.set('PrivateKeys','sk_'+str(contact),str(SK))
