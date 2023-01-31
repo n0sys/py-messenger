@@ -70,9 +70,11 @@ def login():
 					ans=generate_keys(identity=a)
 					if ans==False:
 						print("Unknow error occurred. Please try again")
+					#TODO:if keys generated message/read/generate not login()
 					login()
 					exit()
 			else:
+				#TODO:if keys generated message/read/generate not login()
 				print("Wrong input")
 				login()
 		else:
@@ -80,7 +82,7 @@ def login():
 			login()
 	else:
 		print("username doesn't exist")
-		login()
+		auth()
 
 #Encrypts and stores the message in the db
 def message(identity):

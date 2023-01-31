@@ -3,6 +3,7 @@
 from binascii import hexlify,unhexlify
 from numpy import roll
 
+#TODO: use something other than numpy
 #https://sandilands.info/sgordon/teaching/css322y07s2/protected/CSS322Y07S2H03-RC4-Example.pdf
 #RC4 stream cipher and decipher
 def message_rc4(key,message,op):

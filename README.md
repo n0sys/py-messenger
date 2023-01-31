@@ -9,24 +9,29 @@ This app was written in python as part of a university project in Cryptography. 
 As communication was not the main subject of the project, I decided to use docker to set up a simple communication environment. It consists of 2 docker containers (clients) that communicate with each other and a server in between that hosts a MySQL database. The database will contain user's info, encrypted messages and public encryption keys.
 On linux, install Docker using CLI:
 ```bash
-$ sudo apt-get install docker.io
+$ apt-get install docker.io
 ```
 
 #### Client Containers 
 Using the Dockerfile in the source code, we can create the image that will be used to create the containers. Go to the cloned project directory and run:
 ```bash
-$ sudo docker build -t client:v1 .
-$ docker container create -it --name CONTAINER_NAME IMAGE:TAG
+$ docker build -t client:v1 .
+$ docker network create --subnet=172.18.0.0/16 mynet
+```
+We create then 2 containers by running the below commands twice
+```
+$ docker container create -it --name CONTAINER_NAME client:v1
+$ docker network connect mynet CONTAINER_NAME
 ```
 We can then copy the source code into the containers with:
 ```bash
-$ sudo docker cp py-messenger CONTAINER_NAME:/py-app
+$ docker cp py-messenger/. CONTAINER_NAME:/py-app
 ```
 
 #### Database Container
 A simple command will create for us the database MySQL container:
 ```bash
-$ docker run --name SQL -e MYSQL_ROOT_PASSWORD=PASS -d mysql:latest
+$ docker run --name SQL --net mynet --ip 172.18.0.2 -e MYSQL_ROOT_PASSWORD=PASS -d mysql:latest
 ```
 #### Database Setup
 After connecting to the container, access the database with:
