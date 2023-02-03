@@ -31,14 +31,14 @@ def auth():
 		
 #create an account
 def signup():
-	a=input("Type your username :")
+	a=input("Type your username: ")
 	query = "SELECT username FROM users WHERE username='{}';".format(a)
 	res=db.execute_query(default_username,default_password,query)
 	if res!=[]:
-		print("Username exists!")
+		print("Username already exists!")
 		signup()
 	else: 
-		b=input("Type your password :")
+		b=input("Type your password: ")
 		query = "INSERT INTO users VALUES ('{}','{}')".format(a,b)
 		db.execute_query(default_username,default_password,query,'INSERT')
 		auth()
@@ -46,37 +46,19 @@ def signup():
 
 #login with your username and password
 def login():
-	a=input("Type your username :")
+	a=input("Type your username: ")
 	query = "SELECT username FROM users WHERE username='{}'".format(a)
 	res=db.execute_query(default_username,default_password,query)
 	if res!=[]:
-		b=input("Type your password :")
+		b=input("Type your password: ")
 		query = "SELECT username FROM users WHERE username='{}' and password='{}'".format(a,b)
 		res=db.execute_query(default_username,default_password,query)
 		if res!=[]:
 			print("Successfully logged in")
 			print("You may now message your contacts (M) and read messages they sent you (R).")
-			choice=input("M(essage)/R(read)/G(enerate)?")
-			if choice=='M':
-				message(identity=a)
-			elif choice=='R':
-				read_received_messages(identity=a)
-			elif choice=='G':
-				#check if the message sender stored his keys in the db
-				query = "SELECT * from keylists where username='{}'".format(a)
-				res=db.execute_query(default_username,default_password,query)
-				if res==[]:
-					#generate keys and send to db
-					ans=generate_keys(identity=a)
-					if ans==False:
-						print("Unknow error occurred. Please try again")
-					#TODO:if keys generated message/read/generate not login()
-					login()
-					exit()
-			else:
-				#TODO:if keys generated message/read/generate not login()
-				print("Wrong input")
-				login()
+			yn: bool = False
+			while yn == False:
+				yn = get_choice(a)
 		else:
 			print("Wrong password")
 			login()
@@ -93,7 +75,7 @@ def message(identity):
 		print("This username doesnt exist")
 		message(identity)
 	else:
-		print("username exists")
+		print("User found")
 		#check if the contacted user had already contacted us before and we havent yet
 		query1 = "SELECT * FROM messages_table where username=concat('{}','_','{}');".format(a,identity)
 		res1=db.execute_query(default_username,default_password,query1)
@@ -140,27 +122,14 @@ def message(identity):
 		else:
 			message_number2=int(message_number2[-1][0])
 		message_number=message_number1+message_number2+1
-		msg_type=input("Do you want to send a (M)essage or a (F)ile? : ")
-		if msg_type=='M':
-			msg_type="message"
-			msg=input("Type the message you want to send: ")
-		elif msg_type=='F':
-			msg_type="file"
-			file_loc=input("Please specify the full path to the file you want to send: ")
-			try:
-				sent_file=open(file_loc,"r")
-			except:
-				print("Error : file not found")
-				message(identity)
-				exit()
-			#read the content of the file
-			msg=sent_file.readlines()
-			msg=''.join(msg)
-			msg=msg.strip()
-		else:
-			print("wrong choice")
-			message(identity)
-			exit()
+		# Get whether user wants to send message or file
+		msg_type: str = None
+		while msg_type == None:
+			msg_type = get_msg_type() 
+		# Get sent message
+		msg: str = None
+		while msg == None:
+			msg = get_msg(msg_type)
 		for i in range(message_number):
 			#double ratchet | generate chain key corresponding to message number
 			SK=hmac(SK,1,0)
@@ -391,7 +360,58 @@ def string_to_bytesarray(string: str) -> bytearray:
 		bytes_array[counter]=int(item, 16)
 		counter+=1
 	return bytes_array
-		
+
+def get_choice(identity: str) -> bool:
+	choice=input("M(essage)/R(read)/G(enerate)?")
+	if choice=='M':
+		message(identity)
+		return True
+	elif choice=='R':
+		read_received_messages(identity)
+		return True
+	elif choice=='G':
+		#check if the message sender stored his keys in the db
+		query = "SELECT * from keylists where username='{}'".format(identity)
+		res=db.execute_query(default_username,default_password,query)
+		if res==[]:
+			#generate keys and send to db
+			ans=generate_keys(identity)
+			if ans==False:
+				print("Unknow error occurred. Please try again")
+			return False
+		print("Keys already generated")
+		return False
+	else:
+		print("Wrong input")
+		return False
+
+def get_msg_type() -> str:
+	msg_type=input("Do you want to send a (M)essage or a (F)ile? : ")
+	if msg_type=='M':
+		return "message"	
+	elif msg_type=='F':
+		return "file"
+	else:
+		return None
+
+def get_msg(msg_type: str) -> str:
+	if msg_type=='message':
+		msg=input("Type the message you want to send: ")
+		return msg
+	elif msg_type=='file':
+		file_loc=input("Please specify the full path to the file you want to send: ")
+		try:
+			sent_file=open(file_loc,"r")
+		except:
+			print("Error : file not found")
+			return None
+		#read the content of the file
+		#TODO Read and send binary files
+		msg=sent_file.readlines()
+		msg=''.join(msg)
+		msg=msg.strip()
+		return msg
+	
 if __name__ == "__main__":
 	welcome()
 	auth()
