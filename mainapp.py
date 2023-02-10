@@ -138,7 +138,6 @@ def message(identity):
 		#encrypt message | rc4 if file - rc5 if plain message
 		if msg_type=="file":
 			enc_message=message_rc4(message_key,msg,op=1)
-		#TODO: fix file encryption - RC5 key taken as string
 		elif msg_type=="message":
 			message_key = string_to_bytesarray(message_key)
 			cryptor = RC5(message_key)
@@ -181,8 +180,12 @@ def read_received_messages(identity):
 		Config.read("config.ini")
 		sk_dict[i]=str(Config.get('PrivateKeys',"sk_"+i))
 	counter=0
+	usernames_messages: dict = {}
+	usernames_files: dict = {}
+	#TODO: try to optimize the code below // very slow rn
 	for row in res:
-		SK=sk_dict[row[0].split("_")[0]]
+		user: str = row[0].split("_")[0]
+		SK=sk_dict[user]
 		for i in range(int(row[1])):
 			#double ratchet | generate chain key corresponding to message number
 			SK=hmac(SK,1,0)
@@ -191,54 +194,45 @@ def read_received_messages(identity):
 		if row[3]=='file':
 			#then decrypt as file | rc4
 			dec_message=message_rc4(message_key,row[2],op=0)
+			# if we haven't yet stored files in our dictionary for the user
+			if usernames_files.get(user) == None:
+				usernames_files[user] = [dec_message]
+				continue
+			# if we already stored in our dictionary files for this user
+			usernames_files[user].append(dec_message)
 		elif row[3]=='message':
 			#then decrypt as message | rc5
 			message_key = string_to_bytesarray(message_key)
 			cryptor = RC5(message_key)
 			cryptor.mode = "CBC"
 			dec_message = cryptor.decrypt_str(row[2])
-		#decrypt row[2]
-		#first iteration
-		if started==0:
-			same_user_messages=str(row[0].split('_')[0])+':::#?'+str(dec_message)+'-?!:,:'+row[3]+',,,,,,?'
-			un_prev_row=row[0]
-		if un_prev_row==row[0] and started != 0:
-			same_user_messages+=str(dec_message)+'-?!:,:'+row[3]+',,,,,,?'
-		elif un_prev_row!=row[0] and un_prev_row!='':
-			un_prev_row=row[0]
-			all_received_messages_list.append(same_user_messages)
-			same_user_messsages=''
-			same_user_messages=str(row[0].split('_')[0])+':::#?'+str(dec_message)+'-?!:,:'+row[3]+',,,,,,?'
-		started=1
-		counter+=1
-		if counter == len(res):
-			all_received_messages_list.append(same_user_messages)
-	for chat in all_received_messages_list:
-		#TODO: fix below
-		user=chat.split(":::#?")[0]
-		print("Showing messages received from "+user+ " :")
-		msgs=chat.split(":::#?")[1]
-		cnt=1
-		msgs=msgs.split(",,,,,,?")
-		for msg in msgs:
-			if msg == '':
+			# if we haven't yet stored a message in our dictionary for the user
+			if usernames_messages.get(user) == None:
+				usernames_messages[user] = [dec_message]
 				continue
-			content=msg.split('-?!:,:')[0]
-			typ=msg.split('-?!:,:')[1]
-			if typ == "file":
-				print("You have received a file from "+user+ " !")
-				if not "Downloads" in os.listdir():
-					os.mkdir("Downloads")
-				path="Downloads/"+content.split(" ")[0]+".txt"
-				fil=open(path,"w")
-				fil.write(content)
-				fil.write("\n")
-				fil.close()
-				print("File saved in "+path)
-			elif typ == "message":
-				print(str(cnt)+") "+content)
+			# if we already stored in our dictionary a message for this user
+			usernames_messages[user].append(dec_message)
+	if usernames_messages != {}:
+		for user in usernames_messages.keys():
+			print("Showing messages received from "+user+ " :")
+			cnt: int = 1
+			for message in usernames_messages[user]:
+				print(str(cnt)+") "+message)
 				cnt+=1
-
+	if usernames_files != {}:
+		#Create Downloads directory if it doesn't exist
+		if not "Downloads" in os.listdir():
+			os.mkdir("Downloads")
+		for user in usernames_files.keys():
+			print("You have received a file from "+user+ " !")
+			cnt: int = 1
+			for file in usernames_files[user]:
+				path="Downloads/"+file.split(" ")[0]+".txt"
+				with open(path, "w") as f:
+					f.write(file)
+					f.write("\n")
+				print("File saved in "+path)
+			
 #generates users keys and stores them in db
 def generate_keys(identity):
 	#fetch p and g from the database
